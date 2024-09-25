@@ -1,1 +1,0 @@
-/usr/bin/c++ -O3 -DNDEBUG CMakeFiles/LFU.dir/source/main.cpp.o -o ../bin/LFU  libLFUlib.a 
