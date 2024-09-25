@@ -1,0 +1,4 @@
+/home/mihail/Документы/coding/C++ projects/VLcache/build/CMakeFiles/LFUlib.dir
+/home/mihail/Документы/coding/C++ projects/VLcache/build/CMakeFiles/LFU.dir
+/home/mihail/Документы/coding/C++ projects/VLcache/build/CMakeFiles/edit_cache.dir
+/home/mihail/Документы/coding/C++ projects/VLcache/build/CMakeFiles/rebuild_cache.dir
