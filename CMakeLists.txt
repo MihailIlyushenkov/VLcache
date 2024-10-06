@@ -1,27 +1,45 @@
 cmake_minimum_required(VERSION 3.11)
 project("LFU_Cache")
 
-SET(SRCS 
-    source/main.cpp; 
-    #source/LFU_cache.cpp
+SET(LFU_SRCS
+    source/test_LFU.cpp; 
+    source/cache_assistance.cpp
+)
+
+SET(Ideal_SRCS
+    source/test_Ideal.cpp; 
+    source/cache_assistance.cpp
 )
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-set(COMPILE_FLAGS
-    "-Wall"
-)
+set(COMPILE_FLAGS "-Wall")
 
-add_library(LFUlib STATIC ${SRCS})
+add_library(LFUlib STATIC ${LFU_SRCS})
+add_library(Ideallib STATIC ${Ideal_SRCS})
+
 target_include_directories(LFUlib PUBLIC "include")
-add_executable(LFU source/main.cpp)
+target_include_directories(Ideallib PUBLIC "include")
+
+add_executable(LFU source/test_LFU.cpp)
+add_executable(Ideal source/test_Ideal.cpp)
 
 target_compile_definitions(LFU PRIVATE
-$<$<CONFIG:Debug>:TEST=1>
-$<$<CONFIG:Release>:Release=1>
+    $<$<CONFIG:Debug>:Debug=1>
+    $<$<CONFIG:Release>:Release=1>
+)
+
+target_compile_definitions(Ideal PRIVATE
+    $<$<CONFIG:Debug>:Debug=1>
+    $<$<CONFIG:Release>:Release=1>
 )
 
 target_compile_options(LFU PRIVATE ${COMPILE_FLAGS})
+target_compile_options(Ideal PRIVATE ${COMPILE_FLAGS})
+
 target_link_libraries(LFU LFUlib)
+target_link_libraries(Ideal Ideallib)
+
+
 
 #cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
 #cmake --build build

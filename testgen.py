@@ -1,11 +1,13 @@
 import random
 import struct
+from sys import exit
 
-test_count = 10000
+test_count = 100
+cache_size = 10
 
 bottom_val = 0
-low_val =  1000
-high_val = 100000
+low_val =  10
+high_val = 100
 chance = 5 #chance to generate number between 1 and high
 
 data = []
@@ -22,20 +24,22 @@ for i in range(test_count):
         high_count += 1
 
 unique = len(set(data))
-print(f"{low_count} {high_count} {unique}")
+print(f"low calls: {low_count}, high calls: {high_count}, unique: {unique}")
 
 with open("test/data.bin", "bw") as f:
-    for i in ([test_count, low_count, high_count, unique] + data):
+    for i in ([cache_size, test_count] + data):
         f.write(struct.pack('<i', i)) #i = int -> 4 bytes
 
 with open("test/data.txt", "w") as f:
-    for i in ([test_count, low_count, high_count, unique] + data):
+    for i in ([cache_size, test_count] + data):
         f.write(str(i) + '\n')
 
 
 #идеальный кэш
 
 # print(data)
+
+exit()
 
 size = 1000
 cache_array = []
