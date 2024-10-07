@@ -7,6 +7,6 @@ struct MYPage
 
 MYPage SlowGetPage(int Key);
 void printpage(MYPage* p);
-int checkpage(MYPage* p, int val);
+int checkpage(MYPage p, int val);
 int* readtestsdata(const char* filename, size_t* testcount);
 int testfile(const char* filename);

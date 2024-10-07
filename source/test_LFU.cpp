@@ -25,14 +25,20 @@ int main(const int argc, const char* argv[]){
         }
     }
 
-    LFUcache<MYPage, int> LFU(size, SlowGetPage);
+    int anchors_count = 6;
+    int anchors[6] = {0, 1, 2, 3, 4, 5};
+    int anchor_key = -__INT_MAX__;
+
+
+    LFUcache<MYPage, int> LFU(size, anchors_count, anchors, anchor_key, SlowGetPage);
+    LFU.generate_anchors();
 
     for(int i = 0; i < testcount; i++){
-        if(!checkpage(LFU.getPage(requests[i]), requests[i])) {
+        if(!checkpage(LFU.getPageKostyli(requests[i]), requests[i])) {
             std::cout << "bad page\n";
         }
     }
-    
+
     // LFU.DUMP();
     std::cout << LFU.getHits();
 

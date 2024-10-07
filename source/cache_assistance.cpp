@@ -16,8 +16,8 @@ void printpage(MYPage* p) {
     else std::cout << "got page " << p->data[0] << '\n';
 }
 
-int checkpage(MYPage* p, int val){
-    return (p->data[0] == val)?1:0;
+int checkpage(MYPage p, int val){
+    return (p.data[0] == val)?1:0;
 }
 
 int* readtestsdata(const char* filename, size_t* testcount){
@@ -47,23 +47,4 @@ int* readtestsdata(const char* filename, size_t* testcount){
     }
 
     return data;
-}
-
-int testfile(const char* filename){
-    int size = 1000;
-
-    LFUcache<MYPage, int> LFU(size, SlowGetPage);
-
-    size_t testcount = 0;
-
-    int* data = readtestsdata("test/data.bin", &testcount);
-
-    for(size_t i = 0; i < testcount; i++){
-        MYPage* P = LFU.getPage(data[i]);
-        if(!checkpage(P, data[i])) std::cout << "bad test\n"; 
-    }    
-
-    LFU.DUMP();
-
-    return 0;
 }

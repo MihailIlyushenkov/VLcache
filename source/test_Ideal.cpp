@@ -25,7 +25,7 @@ int main(const int argc, const char* argv[]){
         }
     }
 
-    LFUcache<MYPage, int> LFU(size, SlowGetPage);
+    LFUcache<MYPage, int> LFU(size, -1, 0, 0, SlowGetPage);
     std::unordered_map<int, std::list<int>> ReqMap;
     
     for(int i = 0; i < testcount; i++){
