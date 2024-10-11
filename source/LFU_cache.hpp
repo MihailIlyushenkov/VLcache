@@ -25,7 +25,6 @@ class LFUcache{
     
         DPage getPage(KeyT Key); //Key = unique index of page
 
-        DPage getPageKostyli(KeyT Key); //Key = unique index of page
         void generate_anchors();
 
         //uses requests, that will appear in the future
@@ -46,8 +45,7 @@ class LFUcache{
 
         int remove_el(ListIt iter);
         ListIt move_el(ListIt elem, ListIt pos);
-
-
+        int getFutureRequestCount(KeyT Key, int request_index, std::unordered_map<KeyT, std::list<int>>& RQmap);
 
         long unsigned int MaxSize = 0;
         
@@ -58,6 +56,7 @@ class LFUcache{
         int FastPageLoadCounter = 0;
         int SlowPageLoadCounter = 0;
         int RemoveCounter = 0;
+        int CacheInserts = 0;
 
 
         std::list<ListEl<DPage, KeyT>> PageList;
@@ -115,91 +114,6 @@ int LFUcache<DPage, KeyT>::rm(int index) {
     return 0;
 }
 
-
-template <typename DPage, typename KeyT>
-DPage LFUcache<DPage, KeyT>::getPage(KeyT Key){
-
-    auto y = PageMap.find(Key);
-
-    if(y == PageMap.end()) {
-        //creating list element with given data page and 0 calls
-
-        if(MaxSize == PageList.size()){
-            if(PageList.begin()->counter == 0)
-                if (PageList.size() == 1) {
-                    remove_el(PageList.begin());
-                }
-                else {
-                    int rem_flag = 1;
-                    for(ListIt x = PageList.begin(); x != PageList.end(); x++){
-                        if (x->counter > 0) {
-                            remove_el(--x);
-                            rem_flag = 0;
-                            break;
-                        }
-                    }
-                    if (rem_flag == 1) {
-                        remove_el(--PageList.end());
-                    }
-                }
-            else {
-                remove_el(PageList.begin());
-            }
-        }
-
-
-        DPage NewPage = GetPageFunc(Key);
-        SlowPageLoadCounter++;
-        ListEl<DPage, KeyT> NewListEl = {0, Key, NewPage}; 
-
-        PageList.push_front(NewListEl);
-        PageMap.emplace(Key, PageList.begin());
-
-        return PageList.begin()->page;
-    }
-    else {                              
-        ListIt x = y->second; //iterator to the list element
-    
-        if(x == PageList.end()){                       
-            //element is not in list (bad, smth went wrong)                    
-            std::cout << "invalid page. Something is very wrong" << '\n';
-            std::exit(-1);
-        }
-        else{                                          
-
-            //everything is fine
-            FastPageLoadCounter++;
-            x->counter++;
-            ListIt iter = x;
-
-            for(iter++; iter != PageList.end(); iter++){
-                if(iter->counter > x->counter) {
-
-                    ListIt inserted =  PageList.insert(iter, *x);
-                    PageList.erase(x);
-                    PageMap.erase(Key);
-                    PageMap.emplace(Key, inserted);
-                    return inserted->page;
-                }
-            }
-
-            if(PageList.back().counter <= x->counter) {
-                PageList.push_back(*x);
-                PageMap.erase(Key);
-                PageList.erase(x);
-                PageMap.emplace(Key, --PageList.end());
-                return PageList.back().page;
-            }
-
-            return x->page;
-        }
-    }
-
-    std::cout << "unexpected error\n";
-    return GetPageFunc(Key);
-}
-
-
 template <typename DPage, typename KeyT>
 typename std::list<ListEl<DPage, KeyT>>::iterator LFUcache<DPage, KeyT>::move_el(ListIt pos, ListIt elem){ //removes element given by 1st iterator and creates new before 2nd iterator
     if(elem == PageList.end() || elem == pos){
@@ -227,7 +141,7 @@ typename std::list<ListEl<DPage, KeyT>>::iterator LFUcache<DPage, KeyT>::move_el
 }
 
 template <typename DPage, typename KeyT>
-DPage LFUcache<DPage, KeyT>::getPageKostyli(KeyT Key){
+DPage LFUcache<DPage, KeyT>::getPage(KeyT Key){
     auto x = PageMap.find(Key);
 
     if(x == PageMap.end()){
@@ -288,68 +202,54 @@ DPage LFUcache<DPage, KeyT>::getPageKostyli(KeyT Key){
 }
 
 template <typename DPage, typename KeyT>
-DPage LFUcache<DPage, KeyT>::getPage_ideal(KeyT Key, int request_index, std::unordered_map<KeyT, std::list<int>>& RQmap){
-    
-    // std::cout << "Key: " << Key << " index: " << request_index << '\n';
-    // this->DUMP();
+int LFUcache<DPage, KeyT>::getFutureRequestCount(KeyT Key, int request_index, std::unordered_map<KeyT, std::list<int>>& RQmap){
+    int counter = 0;
+    // std::cout << "rq: (" << request_index << ":" << Key << ")\n";
+    for(int& elem: RQmap[Key]){
+        // std::cout << elem << ' ';
+        if(elem > request_index) counter++;
+    }
+    // std::cout << "-> " << counter << '\n';
+    return counter;
+}
 
+template <typename DPage, typename KeyT>
+DPage LFUcache<DPage, KeyT>::getPage_ideal(KeyT Key, int request_index, std::unordered_map<KeyT, std::list<int>>& RQmap){
     auto x = PageMap.find(Key);
     ListIt elem_to_remove = PageList.begin();
 
     if(x == PageMap.end()){
 
-        auto pr = RQmap.find(Key);
-        if(pr == RQmap.end()){
-            std::cout << "bad request (not in request map)\n";
-        }
-        else if (pr->second.back() <= request_index) {
-            SlowPageLoadCounter++;
-            // std::cout << "element (" << Key << " : "<< request_index << ") wont appear in future\n";
-
-            return GetPageFunc(Key); //??????????
+        if(RQmap[Key].back() <= request_index) {
+            return GetPageFunc(Key); //no requests in the future
         }
 
         if(PageList.size() == MaxSize){ //removing element
-            int cur_dist = -1;
-            int max_dist = -1;
 
+            int counter = 0;
+            int min_counter = INT32_MAX;
+            int current_request_counter = getFutureRequestCount(Key, request_index, RQmap);
+            
             for(ListIt iter = PageList.begin(); iter != PageList.end(); iter++){
-                cur_dist = -1;
-                // std::cout << "checking elem at key " << iter->Key << '\n';
-                auto rqpair = RQmap.find(iter->Key);
-                if(rqpair == RQmap.end()) {
-                    std::cout << "Error: request is not in request map.\n";
-                    return GetPageFunc(Key);;
-                } 
-                else {
-                    // std::cout << "key: " << rqpair->first << "-> ";
-                    // for(auto& distance: rqpair->second) {std::cout << distance << ' ';}
-                    // std::cout << '\n';
-
-                    for(auto& distance: rqpair->second) { //finding index of next request of this element
-                        if(distance > request_index){
-                            cur_dist = distance - request_index;
-                            // std::cout << "founded dist is " << cur_dist << '\n';
-                            break;
-                        }
-                    }
-                }
-
-                if (cur_dist == -1) { //element wont be requested in the future
+                counter = getFutureRequestCount(iter->Key, request_index, RQmap);
+                if(counter < min_counter){
+                    min_counter = counter;
                     elem_to_remove = iter;
-                    // std::cout << "elem to remove cuz wont be used: " << iter->Key << '\n';s
-                    break;
                 }
-                else if(cur_dist > max_dist) {
-                    max_dist = cur_dist;
-                }
+            }
+        
+            if(min_counter > current_request_counter) { //не хэшируем, т.к. элемент встретится меньшее количество раз, чем все уже захэшированные элементы
+                SlowPageLoadCounter++;
+                return GetPageFunc(Key);
             }
 
             remove_el(elem_to_remove);
         }
 
+        //кэшируем
         DPage NewPage = GetPageFunc(Key);
         SlowPageLoadCounter++;
+        CacheInserts++;
         ListEl<DPage, KeyT> NewListEl = {0, Key, NewPage}; 
 
         PageList.push_front(NewListEl);
@@ -359,7 +259,7 @@ DPage LFUcache<DPage, KeyT>::getPage_ideal(KeyT Key, int request_index, std::uno
     }
     else{
         FastPageLoadCounter++;
-        return (x->second->page);
+        return (x->second->page);   
     }
     
     std::cout << "unexpected error\n";
@@ -375,7 +275,7 @@ template <typename DPage, typename KeyT>
 int LFUcache<DPage, KeyT>::DUMP(){
     std::cout << "-------------------------------DUMP START-------------------------------" << '\n';
 
-    #ifdef TEST
+    // #ifdef TEST
     std::cout << "\nlist\n";
     for(auto &x: PageList){
         std::cout << "Page(" << x.page.data[0] << "):" << x.Key << "->" << x.counter << '\n';
@@ -390,11 +290,13 @@ int LFUcache<DPage, KeyT>::DUMP(){
     for(auto &x: AnchorMap){
         std::cout << "Key " << x.first << ": " << "Page(" << x.second->page.data[0] << "):" << -x.second->Key << "->" << x.second->counter << '\n';
     }
-    #endif
+    // #endif
 
     std::cout << "\nSlow loads: " << SlowPageLoadCounter << '\n';
     std::cout << "Fast loads: " << FastPageLoadCounter << '\n';
     std::cout << "Removes counter: " << RemoveCounter << '\n';
+    std::cout << "Cache insterts: " << CacheInserts << '\n';
+
     std::cout << "List lenght: " << PageList.size() << " (including "<< anchors_count << " anchors)" << '\n';
     
     std::cout << "-------------------------------DUMP END-------------------------------" << '\n';

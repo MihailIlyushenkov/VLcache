@@ -25,7 +25,7 @@ int main(const int argc, const char* argv[]){
         }
     }
 
-    LFUcache<MYPage, int> LFU(size, -1, 0, 0, SlowGetPage);
+    LFUcache<MYPage, int> LFU(size, 0, 0, 0, SlowGetPage);
     std::unordered_map<int, std::list<int>> ReqMap;
     
     for(int i = 0; i < testcount; i++){
@@ -34,19 +34,29 @@ int main(const int argc, const char* argv[]){
             std::list<int> indexes;
             indexes.push_back(i);
             ReqMap.emplace(requests[i], indexes);
-
         }
         else{
             x->second.push_back(i);
         }
     }
 
+    // std::cout << "\nRQmap\n";
+    // for(auto &iter: ReqMap){
+    //     std::cout << "Page(" << iter.first << "):";
+    //     for(auto &index: iter.second){
+    //         std::cout << index << ' ';
+    //     }
+    //     std::cout << '\n';
+    // }
+
     for(int i = 0; i < testcount; i++){
         LFU.getPage_ideal(requests[i], i, ReqMap);
+        // LFU.DUMP();
     }
 
+
     // LFU.DUMP();
-    std::cout << LFU.getHits();
+    std::cout << LFU.getHits() << '\n';
 
     return 0;
 }
