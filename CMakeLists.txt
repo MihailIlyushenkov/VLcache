@@ -12,7 +12,7 @@ SET(Ideal_SRCS
 )
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-set(COMPILE_FLAGS "-Wall")
+set(COMPILE_FLAGS "-Wall" "-g")
 
 add_library(LFUlib STATIC ${LFU_SRCS})
 add_library(Ideallib STATIC ${Ideal_SRCS})
