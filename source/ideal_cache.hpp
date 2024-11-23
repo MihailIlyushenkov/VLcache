@@ -103,7 +103,6 @@ size_t ideal_cache<DPage, KeyT>::count_fast_loads(){
 
                 if(!index_queue.empty()){
                     auto [marked_for_remove, _] = index_queue.top();
-                    std::cout << "erased " << marked_for_remove << '\n';
                     ElemMap.erase(marked_for_remove);
                     index_queue.pop();
                 }
