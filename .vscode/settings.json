@@ -45,7 +45,11 @@
         "numbers": "cpp",
         "ostream": "cpp",
         "streambuf": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "chrono": "cpp",
+        "ctime": "cpp",
+        "set": "cpp",
+        "ratio": "cpp"
     },
     "editor.fontSize": 14
 }

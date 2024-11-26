@@ -17,7 +17,7 @@ struct ListEl
 template <typename DPage, typename KeyT>
 class LFUcache{
     public:
-        LFUcache(int size, int anchors_count, int* anchors_arr, KeyT excKey, std::function<DPage(KeyT)> GetPageFunc);
+        LFUcache(int size, size_t anchors_count, int* anchors_arr, KeyT excKey, std::function<DPage(KeyT)> GetPageFunc);
     
         DPage getPage(KeyT Key); //Key = unique index of page
 
@@ -40,7 +40,7 @@ class LFUcache{
 
         long unsigned int MaxSize = 0;
         
-        int anchors_count = 0;
+        size_t anchors_count = 0;
         int* anchors = nullptr;
         KeyT anchor_key;
 
@@ -60,7 +60,7 @@ class LFUcache{
 
 
 template <typename DPage, typename KeyT>
-LFUcache<DPage, KeyT>::LFUcache(int size, int anchors_count, int* anchors_arr, KeyT excKey, std::function<DPage(KeyT)> GetPageFunc): 
+LFUcache<DPage, KeyT>::LFUcache(int size, size_t anchors_count, int* anchors_arr, KeyT excKey, std::function<DPage(KeyT)> GetPageFunc): 
     MaxSize(size), 
     anchors_count(anchors_count),
     anchors(anchors_arr),
@@ -139,7 +139,6 @@ DPage LFUcache<DPage, KeyT>::getPage(KeyT Key){
         else {
             std::cout << "anchor[0] mus be 0. Just do it. Anyway, something went (or will go) wrong\n";
         }
-
     }
     else{
         ListIt iter = x->second;
@@ -226,9 +225,8 @@ int LFUcache<DPage, KeyT>::DUMP(){
 
 template <typename DPage, typename KeyT>
 void LFUcache<DPage, KeyT>::generate_anchors(){
-    //костыли)
 
-    for(int i = 0; i < anchors_count; i++){
+    for(size_t i = 0; i < anchors_count; i++){
         ListEl<DPage, KeyT> l{anchors[i], anchor_key, GetPageFunc(anchor_key)};
         PageList.push_back(l);
         AnchorMap.emplace(anchors[i], --PageList.end());

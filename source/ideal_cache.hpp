@@ -61,8 +61,10 @@ size_t ideal_cache<DPage, KeyT>::count_fast_loads(){
         GlobalIndexMap[RequestVector[i]].push_back(i);
     }
 
+    DUMP();
+
     for(size_t i = 0; i < RequestVector.size(); i++){        
-        // DUMP();
+        
 
 
         KeyT elem_key = RequestVector[i];

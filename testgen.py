@@ -2,13 +2,13 @@ import random
 import struct
 from sys import exit
 
-test_count = 100
+test_count = 10000000
 cache_size = 10
 
 bottom_val = 0
-low_val =  10
-high_val = 100
-chance = 5 #chance to generate number between 1 and high
+low_val =  9
+high_val = 9
+chance = 0 #chance to generate number between 1 and high
 
 data = []
 
